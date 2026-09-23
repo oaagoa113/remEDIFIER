@@ -32,6 +32,13 @@ jobs:
           make
           cd ..
           dotnet publish remEDIFIER/remEDIFIER.csproj
+          
+          # Копируем библиотеки Qt5 из кэша экшена в папку публикации, чтобы программа была портативной
+          cp -P $QT_ROOT_DIR/lib/libQt5Core.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/
+          cp -P $QT_ROOT_DIR/lib/libQt5Bluetooth.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/
+          cp -P $QT_ROOT_DIR/lib/libQt5Network.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/
+          cp -P $QT_ROOT_DIR/lib/libQt5DBus.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/
+          
           rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/remEDIFIER.dbg
           rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/readme.md
 
