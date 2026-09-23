@@ -27,25 +27,38 @@ jobs:
 
       - name: Build
         run: |
+          # 1. Собираем C++ библиотеку comhelper
           cd libcomhelper
           qmake
           make
           cd ..
+          
+          # 2. Публикуем основное .NET приложение
           dotnet publish remEDIFIER/remEDIFIER.csproj
           
-          # Копируем библиотеки comhelper под обоими именами, чтобы избежать DllNotFoundException
-          cp libcomhelper/libcomhelper.so remEDIFIER/bin/Release/net9.0/linux-x64/publish/libcomhelper.so
-          cp libcomhelper/libcomhelper.so remEDIFIER/bin/Release/net9.0/linux-x64/publish/comhelper.so
+          # Задаем переменную для папки вывода, чтобы не дублировать длинный путь
+          PUBLISH_DIR="remEDIFIER/bin/Release/net9.0/linux-x64/publish"
           
-          # Копируем абсолютно ВСЕ библиотеки Qt5, чтобы гарантировать запуск
-          cp -P $QT_ROOT_DIR/lib/libQt5*.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/
+          # 3. Находим скомпилированную библиотеку libcomhelper.so и копируем ее в publish
+          # Используем find, чтобы избежать ошибок с неверным путем (например, если qmake создал ее в подпапке)
+          COMHELPER_PATH=$(find libcomhelper -name "libcomhelper.so" | head -n 1)
+          if [ -z "$COMHELPER_PATH" ]; then
+            echo "Error: libcomhelper.so not found!" && exit 1
+          fi
           
-          # Копируем библиотеки ICU (libicu*.so.56), которые идут в комплекте с Qt, 
+          cp "$COMHELPER_PATH" "$PUBLISH_DIR/libcomhelper.so"
+          cp "$COMHELPER_PATH" "$PUBLISH_DIR/comhelper.so"
+          
+          # 4. Копируем абсолютно ВСЕ библиотеки Qt5, чтобы гарантировать запуск
+          cp -P $QT_ROOT_DIR/lib/libQt5*.so* "$PUBLISH_DIR/"
+          
+          # 5. Копируем библиотеки ICU (libicu*.so.56), которые идут в комплекте с Qt,
           # чтобы приложение запускалось на любых современных дистрибутивах Linux
-          cp -P $QT_ROOT_DIR/lib/libicu*.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/ || true
+          cp -P $QT_ROOT_DIR/lib/libicu*.so* "$PUBLISH_DIR/" || true
           
-          rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/remEDIFIER.dbg
-          rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/readme.md
+          # Очистка мусора
+          rm -f "$PUBLISH_DIR/remEDIFIER.dbg"
+          rm -f "$PUBLISH_DIR/readme.md"
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
