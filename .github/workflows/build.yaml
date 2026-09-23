@@ -33,8 +33,16 @@ jobs:
           cd ..
           dotnet publish remEDIFIER/remEDIFIER.csproj
           
-          # Копируем абсолютно ВСЕ библиотеки Qt5, чтобы гарантировать запуск без DllNotFoundException
+          # Копируем библиотеки comhelper под обоими именами, чтобы избежать DllNotFoundException
+          cp libcomhelper/libcomhelper.so remEDIFIER/bin/Release/net9.0/linux-x64/publish/libcomhelper.so
+          cp libcomhelper/libcomhelper.so remEDIFIER/bin/Release/net9.0/linux-x64/publish/comhelper.so
+          
+          # Копируем абсолютно ВСЕ библиотеки Qt5, чтобы гарантировать запуск
           cp -P $QT_ROOT_DIR/lib/libQt5*.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/
+          
+          # Копируем библиотеки ICU (libicu*.so.56), которые идут в комплекте с Qt, 
+          # чтобы приложение запускалось на любых современных дистрибутивах Linux
+          cp -P $QT_ROOT_DIR/lib/libicu*.so* remEDIFIER/bin/Release/net9.0/linux-x64/publish/ || true
           
           rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/remEDIFIER.dbg
           rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/readme.md
