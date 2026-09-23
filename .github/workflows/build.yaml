@@ -20,6 +20,8 @@ jobs:
           dotnet-version: 9.0.x
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
+        with:
+          modules: qtconnectivity
       - name: Build
         run: |
           cd libcomhelper
@@ -27,13 +29,14 @@ jobs:
           make
           cd ..
           dotnet publish remEDIFIER/remEDIFIER.csproj
-          rm remEDIFIER/bin/Release/net9.0/linux-x64/publish/remEDIFIER.dbg
-          rm remEDIFIER/bin/Release/net9.0/linux-x64/publish/readme.md
+          rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/remEDIFIER.dbg
+          rm -f remEDIFIER/bin/Release/net9.0/linux-x64/publish/readme.md
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: Linux
           path: remEDIFIER/bin/Release/net9.0/linux-x64/publish/
+
   build-macos-arm:
     name: Build MacOS binary
     runs-on: macos-latest
@@ -48,6 +51,8 @@ jobs:
           dotnet-version: 9.0.x
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
+        with:
+          modules: qtconnectivity
       - name: Build
         run: |
           cd libcomhelper
@@ -58,9 +63,10 @@ jobs:
           mkdir -p remEDIFIER.app/Contents/MacOS
           mv remEDIFIER/bin/Release/net9.0/osx-arm64/publish/* remEDIFIER.app/Contents/MacOS/
           rm -rf remEDIFIER.app/Contents/MacOS/remEDIFIER.dsym
-          rm remEDIFIER.app/Contents/MacOS/readme.md
-          mv libcomhelper/build/libQt5Core.dylib remEDIFIER.app/Contents/MacOS/
-          mv libcomhelper/build/libQt5Bluetooth.dylib remEDIFIER.app/Contents/MacOS/
+          rm -f remEDIFIER.app/Contents/MacOS/readme.md
+          # Внимание: Проверьте имена файлов ниже, если используется Qt6 вместо Qt5
+          mv libcomhelper/build/libQt5Core.dylib remEDIFIER.app/Contents/MacOS/ || mv libcomhelper/build/libQt6Core.dylib remEDIFIER.app/Contents/MacOS/
+          mv libcomhelper/build/libQt5Bluetooth.dylib remEDIFIER.app/Contents/MacOS/ || mv libcomhelper/build/libQt6Bluetooth.dylib remEDIFIER.app/Contents/MacOS/
           mv Info.plist remEDIFIER.app/Contents/
           install_name_tool -add_rpath @loader_path/../MacOS remEDIFIER.app/Contents/MacOS/libcomhelper.dylib
       - name: Upload binaries
@@ -68,6 +74,7 @@ jobs:
         with:
           name: MacOS ARM
           path: remEDIFIER.app
+
   build-windows:
     name: Build Windows binary
     runs-on: windows-latest
@@ -82,20 +89,24 @@ jobs:
           dotnet-version: 9.0.x
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
+        with:
+          modules: qtconnectivity
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
       - name: Build
+        shell: bash
         run: |
           cd libcomhelper
           qmake
           nmake
           cd ..
           dotnet publish remEDIFIER/remEDIFIER.csproj
-          mv libcomhelper/build/Qt5Core.dll remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/
-          mv libcomhelper/build/Qt5Bluetooth.dll remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/
-          rm remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/remEDIFIER.pdb
-          rm remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/raylib.pdb
+          # Внимание: Проверьте имена файлов ниже, если используется Qt6 вместо Qt5
+          mv libcomhelper/build/Qt5Core.dll remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/ || mv libcomhelper/build/Qt6Core.dll remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/
+          mv libcomhelper/build/Qt5Bluetooth.dll remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/ || mv libcomhelper/build/Qt6Bluetooth.dll remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/
+          rm -f remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/remEDIFIER.pdb
+          rm -f remEDIFIER/bin/x64/Release/net9.0/win-x64/publish/raylib.pdb
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
